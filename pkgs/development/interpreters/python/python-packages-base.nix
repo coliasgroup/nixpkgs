@@ -44,7 +44,7 @@ let
   fetchPypi = callPackage ./fetchpypi.nix { };
 
   # Check whether a derivation provides a Python module.
-  hasPythonModule = drv: drv?pythonModule && drv.pythonModule == python;
+  hasPythonModule = drv: drv?pythonModule && drv.pythonModule == python.pythonForBuild;
 
   # Get list of required Python modules given a list of derivations.
   requiredPythonModules = drvs: let
@@ -62,7 +62,7 @@ let
     drv.overrideAttrs( oldAttrs: {
       # Use passthru in order to prevent rebuilds when possible.
       passthru = (oldAttrs.passthru or {})// {
-        pythonModule = python;
+        pythonModule = python.pythonForBuild;
         pythonPath = [ ]; # Deprecated, for compatibility.
         requiredPythonModules = requiredPythonModules drv.propagatedBuildInputs;
       };
