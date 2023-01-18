@@ -20,9 +20,14 @@ let
   inherit (lib.customisation) mapCrossIndex renameCrossIndexFrom;
 
   spliceReal =
-    inputs:
+    inputs':
     let
-      mash =
+      inputs = removeAttrs inputs' [ "dontMashWhenSplicing" ];
+      dontMashWhenSplicing = inputs'.dontMashWhenSplicing or false;
+      dontMashWhenSplicingParent = dontMashWhenSplicing || inputs.pkgsHostHost.__dontMashWhenSplicing or false;
+      dontMashWhenSplicingChildren = dontMashWhenSplicingParent || inputs.pkgsHostHost.__dontMashWhenSplicingChildren or false;
+      mash = if dontMashWhenSplicingParent then inputs.pkgsHostTarget else mashReal;
+      mashReal =
         # Other pkgs sets
         inputs.buildBuild
         // inputs.buildTarget
@@ -37,7 +42,10 @@ let
           let
             defaultValue = mash.${name};
             # `or {}` is for the non-derivation attsert splicing case, where `{}` is the identity.
-            value' = mapCrossIndex (x: x.${name} or { }) inputs;
+            value' = mapCrossIndex (x:
+              let y = x.${name} or { };
+              in if y == null then { } else y
+            ) inputs;
 
             augmentedValue = defaultValue // {
               __spliced = lib.filterAttrs (k: v: inputs.${k} ? ${name}) value';
@@ -60,7 +68,9 @@ let
             augmentedValue
             // spliceReal (mapCrossIndex tryGetOutputs value' // { hostTarget = getOutputs value'.hostTarget; })
           else if lib.isAttrs defaultValue then
-            spliceReal value'
+            spliceReal (value' // {
+              dontMashWhenSplicing = dontMashWhenSplicingChildren;
+            })
           else
             # Don't be fancy about non-derivations. But we could have used used
             # `__functor__` for functions instead.
