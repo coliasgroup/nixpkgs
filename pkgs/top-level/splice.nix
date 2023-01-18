@@ -25,9 +25,13 @@ let
     , pkgsHostHost
     , pkgsHostTarget
     , pkgsTargetTarget
+    , dontMashWhenSplicing ? false
     }:
     let
-      mash =
+      dontMashWhenSplicingParent = dontMashWhenSplicing || pkgsHostHost.__dontMashWhenSplicing or false;
+      dontMashWhenSplicingChildren = dontMashWhenSplicingParent || pkgsHostHost.__dontMashWhenSplicingChildren or false;
+      mash = if dontMashWhenSplicingParent then pkgsHostTarget else mashReal;
+      mashReal =
         # Other pkgs sets
         pkgsBuildBuild // pkgsBuildTarget // pkgsHostHost // pkgsTargetTarget
         # The same pkgs sets one probably intends
@@ -90,6 +94,7 @@ let
                 pkgsHostHost = valueHostHost;
                 pkgsHostTarget = valueHostTarget;
                 pkgsTargetTarget = valueTargetTarget;
+                dontMashWhenSplicing = dontMashWhenSplicingChildren;
                 # Don't be fancy about non-derivations. But we could have used used
                 # `__functor__` for functions instead.
               } else defaultValue;
