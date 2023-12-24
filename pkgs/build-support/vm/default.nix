@@ -1,11 +1,13 @@
 { lib
 , pkgs
+, config
 , customQemu ? null
 , kernel ? pkgs.linux
 , img ? pkgs.stdenv.hostPlatform.linux-kernel.target
 , storeDir ? builtins.storeDir
 , rootModules ?
     [ "virtio_pci" "virtio_mmio" "virtio_blk" "virtio_balloon" "virtio_rng" "ext4" "virtiofs" "crc32c_generic" ]
+, requireKVM ? config.vmTools.requireKVM or true
 }:
 
 let
@@ -345,7 +347,7 @@ rec {
      that allows you to boot into the VM and debug it interactively. */
 
   runInLinuxVM = drv: lib.overrideDerivation drv ({ memSize ? 512, QEMU_OPTS ? "", args, builder, ... }: {
-    requiredSystemFeatures = [ "kvm" ];
+    requiredSystemFeatures = lib.optional requireKVM "kvm";
     builder = "${bash}/bin/sh";
     args = ["-e" (vmRunCommand qemuCommandLinux)];
     origArgs = args;
