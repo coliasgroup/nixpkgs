@@ -1341,7 +1341,7 @@ with pkgs;
   };
 
   # No callPackage.  In particular, we don't want `img` *package* in parameters.
-  vmTools = makeOverridable (import ../build-support/vm) { inherit pkgs lib; };
+  vmTools = makeOverridable (import ../build-support/vm) { inherit pkgs lib config; };
 
   releaseTools = callPackage ../build-support/release { };
 
