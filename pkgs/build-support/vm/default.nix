@@ -1,6 +1,7 @@
 {
   lib,
   pkgs,
+  config,
   customQemu ? null,
   kernel ? pkgs.linux,
   img ? pkgs.stdenv.hostPlatform.linux-kernel.target,
@@ -15,6 +16,7 @@
     "virtiofs"
     "crc32c_generic"
   ],
+  requireKVM ? config.vmTools.requireKVM or true,
 }:
 
 let
@@ -381,7 +383,7 @@ rec {
         ...
       }:
       {
-        requiredSystemFeatures = [ "kvm" ];
+        requiredSystemFeatures = lib.optional requireKVM "kvm";
         builder = "${bash}/bin/sh";
         args = [
           "-e"
