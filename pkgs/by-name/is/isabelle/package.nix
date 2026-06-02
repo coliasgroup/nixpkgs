@@ -3,6 +3,7 @@
   stdenv,
   fetchurl,
   fetchFromGitHub,
+  gcc14Stdenv,
   coreutils,
   net-tools,
   java,
@@ -21,13 +22,14 @@
 }:
 
 let
-  vampire' = vampire.overrideAttrs (_: {
+  vampire' = (vampire.override { stdenv = gcc14Stdenv; }).overrideAttrs (_: {
     src = fetchFromGitHub {
       owner = "vprover";
       repo = "vampire";
       tag = "v4.8HO4Sledgahammer";
       hash = "sha256-CmppaGa4M9tkE1b25cY1LSPFygJy5yV4kpHKbPqvcVE=";
     };
+    cmakeFlags = [ (lib.cmakeFeature "CMAKE_BUILD_HOL" "On") ];
   });
 
   sha1 = stdenv.mkDerivation {
